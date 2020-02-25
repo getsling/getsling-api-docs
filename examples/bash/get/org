@@ -1,0 +1,10 @@
+#!/bin/bash
+if [ $# -ne 2 ]
+then
+  echo "./org <token> <org>"
+  exit 1
+fi
+SERVER=${SERVER:=api}
+curl -G "https://$SERVER.getsling.com/organisations/$2" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"

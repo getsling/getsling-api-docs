@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ $# -ne 1 ]
+then
+  echo "./concise <token>"
+  echo "Returns a concise description of users and groups."
+  exit 1
+fi
+SERVER=${SERVER:=api}
+curl -G "https://$SERVER.getsling.com/users/concise" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"

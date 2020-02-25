@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ $# -ne 4 ]
+then
+  echo "./calendar <token> <org> <user> <dates>"
+  exit 1
+fi
+SERVER=${SERVER:=api}
+curl -G "https://$SERVER.getsling.com/calendar/$2/users/$3" \
+  --data-urlencode "dates=$4" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"

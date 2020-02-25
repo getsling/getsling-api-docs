@@ -1,0 +1,24 @@
+#!/bin/bash
+if [ $# -ne 6 ]
+then
+  echo "./shifts <token> <start> <end> <location> <position> <user>"
+  exit 1
+fi
+data="
+[
+  {
+    \"dtstart\": \"$2\",
+    \"dtend\": \"$3\",
+    \"location\": { \"id\": $4 },
+    \"position\": { \"id\": $5 },
+    \"user\": { \"id\": $6 }
+  }
+]
+"
+SERVER=${SERVER:=api}
+curl "https://$SERVER.getsling.com/shifts/bulk" \
+  -X POST \
+  -d "${data//[$'\t\r\n ']}" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"

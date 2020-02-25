@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ $# -ne 2 ]
+then
+  echo "./publish <token> <shift>"
+  exit 1
+fi
+SERVER=${SERVER:=api}
+curl "https://$SERVER.getsling.com/shifts/$2/sync" \
+  -X POST \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"
