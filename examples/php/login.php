@@ -10,8 +10,6 @@ $options = [
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => json_encode($data),
     CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-    CURLOPT_SSL_VERIFYHOST => false,
-    CURLOPT_SSL_VERIFYPEER => false,
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HEADER => true
 ];
