@@ -1,0 +1,21 @@
+#!/bin/bash
+if [ $# -ne 4 ]
+then
+  echo "./create_projected_date <token> <amount> <date> <location>"
+  exit 1
+fi
+data="
+  {
+    \"amount\": \"$2\",
+    \"date\": \"$3\",
+    \"locationId\": "$4",
+    \"type\": \"ProjectedDate\"
+  }
+"
+SERVER=${SERVER:=api}
+curl "https://$SERVER.getsling.com/sales/list" \
+  -X POST \
+  -d "${data//[$'\t\r\n ']}" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+platforms=(facebook google)
+
+if [ $# -lt 2 ]; then
+  echo "./${0##*/} [-d] <platform> <access token> [<email>]"
+
+  echo "Where platform is one of: ${platforms[@]}"
+  echo "Returns an Authorization token."
+  exit 1
+fi
+SERVER=${SERVER:=api}
+
+if [ $# -eq 3 ]; then
+  payload="{\"token\": \"$2\",\"email\": \"$3\"}"
+else
+  payload="{\"code\": \"$2\"}"
+fi
+
+curl -is "https://$SERVER.getsling.com/account/oauth/$1/login" \
+  -X POST \
+  -d "$payload" \
+  -H "Content-Type: application/json" \
+  -H "accept: */*" | \
+grep "^authorization: " | \
+sed "s/^authorization: //"

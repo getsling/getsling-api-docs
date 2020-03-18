@@ -1,0 +1,10 @@
+#!/bin/bash
+if [ $# -ne 1 ]
+then
+  echo "./users <token>"
+  exit 1
+fi
+SERVER=${SERVER:=api}
+curl -G "https://$SERVER.getsling.com/users" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"

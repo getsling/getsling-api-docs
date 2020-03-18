@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ $# -ne 2 ]
+then
+  echo "./roster <token> <dates>"
+  exit 1
+fi
+SERVER=${SERVER:=api}
+curl -G "https://$SERVER.getsling.com/reports/roster" \
+  --data-urlencode "dates=$2" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"
