@@ -1,0 +1,86 @@
+#!/bin/bash
+set -e
+
+# Validate arguments.
+if [ $# -ne 2 ]
+then
+  echo "./labor_with_users <token> <dates>"
+  echo "Get the labor report with users mapped to employee ID."
+  exit 1
+fi
+SERVER=${SERVER:=api}
+
+# Check for jq.
+command -v jq >/dev/null 2>&1 || {
+  echo >&2 "jq is required but not installed."
+  exit 1
+}
+
+# Get a concise description of positions and locations.
+groups=$(
+  curl -Gs "https://$SERVER.getsling.com/users/concise" \
+    -H "Authorization: $1" \
+    -H "accept: */*"
+)
+
+# Parse out location and position lookups.
+filter='
+  .groups |
+  to_entries |
+  map(.value) |
+  map(select(.type == "type-value")) |
+  map({id, name})
+'
+type="s/type-value/location/"
+locations=$(echo $groups | jq $(echo ${filter//[$'\t\r\n ']} | sed "$type"))
+type="s/type-value/position/"
+positions=$(echo $groups | jq $(echo ${filter//[$'\t\r\n ']} | sed "$type"))
+
+# Parse out users.
+filter='
+  .users |
+  to_entries |
+  map(.value) |
+  map({id, email, employeeId})
+'
+users=$(echo $groups | jq ${filter//[$'\t\r\n ']})
+
+# Get the labor report.
+labor=$(
+  curl -G "https://$SERVER.getsling.com/reports/labor" \
+    --data-urlencode "dates=$2" \
+    -H "Authorization: $1" \
+    -H "accept: */*"
+)
+
+# Use base64 to avoid special characters.
+for row in $(echo "${labor}" | jq -r '.cost[] | @base64'); do
+  # Get ids.
+  item=$(echo "$row" | base64 --decode )
+  location_id=$(echo $item | jq '.location.id')
+  position_id=$(echo $item | jq '.position.id')
+  user_id=$(echo $item | jq '.user.id')
+
+  # Map properties.
+  location=$(
+    echo $locations |
+    jq "map(select(.id == $location_id)) | .[0]"
+  )
+  position=$(
+    echo $positions |
+    jq "map(select(.id == $position_id)) | .[0]"
+  )
+  user=$(
+    echo $users |
+    jq "map(select(.id == $user_id)) | .[0]"
+  )
+
+  # Render the row.
+  result="{
+    \"location\": $location,
+    \"position\": $position,
+    \"user\": $user,
+    \"item\": $item
+  }"
+  echo "$result" | jq "."
+done

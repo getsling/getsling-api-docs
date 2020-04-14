@@ -1,0 +1,21 @@
+#!/bin/bash
+if [ $# -ne 3 ]
+then
+  echo "./deactivate <token> <user> <active>"
+  exit 1
+fi
+data="
+[
+  {
+    \"id\": $2,
+    \"active\": $3
+  }
+]
+"
+SERVER=${SERVER:=api}
+curl "https://$SERVER.getsling.com/users?shifts=delete&tasks=delete" \
+  -X PUT \
+  -d "${data//[$'\t\r\n ']}" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*" \

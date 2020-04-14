@@ -5,6 +5,14 @@ then
   exit 1
 fi
 SERVER=${SERVER:=api}
+
+# Check for jq.
+command -v jq >/dev/null 2>&1 || {
+  echo >&2 "jq is required but not installed."
+  exit 1
+}
+
+# Get the org id.
 curl -s "https://$SERVER.getsling.com/account/login" \
   -X POST \
   -d "{\"email\": \"$1\",\"password\": \"$2\"}"\
