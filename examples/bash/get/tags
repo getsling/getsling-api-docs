@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ $# -ne 1 ]
+then
+  echo "./tags <token>"
+  echo "Returns a list of tags."
+  exit 1
+fi
+SERVER=${SERVER:=api}
+curl -G "https://$SERVER.getsling.com/tags" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"
