@@ -1,0 +1,29 @@
+#!/bin/bash
+if [ $# -ne 6 ]
+then
+  echo "./shifts <token> <timestamp_clock_in> <timestamp_clock_out> <locationId> <positionId> <userId>"
+  exit 1
+fi
+data="
+[
+  {
+    \"timestamp\": \"$2\",
+    \"type\": \"clock_in\",
+    \"locationId\": $4,
+    \"positionId\": $5,
+    \"user\": { \"id\": $6 }
+  },
+  {
+    \"timestamp\": \"$3\",
+    \"type\": \"clock_out\",
+    \"user\": { \"id\": $6 }
+  }
+]
+"
+SERVER=${SERVER:=api}
+curl "https://$SERVER.getsling.com/timesheets/bulk" \
+  -X PUT \
+  -d "${data//[$'\t\r\n ']}" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"
