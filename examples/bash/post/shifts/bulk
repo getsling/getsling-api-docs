@@ -11,7 +11,7 @@ data="
     \"dtend\": \"$3\",
     \"location\": { \"id\": $4 },
     \"position\": { \"id\": $5 },
-    \"user\": { \"id\": $6 }
+    \"users\": [{ \"id\": $6 }]
   }
 ]
 "
