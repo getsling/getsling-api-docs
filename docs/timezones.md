@@ -15,17 +15,6 @@ the remainder of this document.
 Other objects relate to a specific point in time only, such as sales. We will refer to these objects as being 
 "timezone insensitive" for the remainder of this document.
 
-
-## User and Location Timezones
-As stated above, users and locations are timezone sensitive objects, and so their timezone must be set.
-However, this is **NOT** enforced by the API.
-
-It is therefore the responsibility of the client to enforce non-null timezones for these objects.
-
-In general, in the (unlikely) case where both user and location times are unset, the server will use the `UTC` timezone.
-For the sake of calrity and simplicity, we assume in this document that users and location always have their timezones
-set.
-
 ## World Clock
 
 [The world clock](https://support.getsling.com/en/articles/2016187-does-sling-convert-shift-times-based-on-different-time-zones)
