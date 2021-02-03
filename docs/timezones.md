@@ -31,7 +31,7 @@ When interacting with the API, timestamps and ranges should **ALWAYS** follow IS
 
 Both naive and timezone aware timestamps will be accepted by the API. However, a timezone aware timestamp will be
 **converted** (see [below](#Timezone Aware Timestamps)), so to avoid confusion and complexity it is highly recommended 
-to use naive timezones. In particular, when using an API call with multiple timestamps (such as shift start, shift end 
+to use naive timestamps. In particular, when using an API call with multiple timestamps (such as shift start, shift end 
 and recurrence end), all timestamps should be either naive or aware (in which case they should have the same timezone).
 
 # Examples
