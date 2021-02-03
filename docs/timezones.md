@@ -8,22 +8,25 @@ This document explains how to work with timezones and timestamps while interacti
 
 ## Timezone Sensitive Objects
 
-Some objects are innately connected to a timezone, like users and locations. Other objects are indirectly connected as a 
-result, like shifts, which take place at a location. We will refer to these objects as being "timezone sensitive" for 
-the remainder of this document.
+Some objects are innately connected to a timezone, like users and locations. Other objects are
+indirectly connected as a result, like shifts, which take place at a location. We
+will refer to these objects as being "timezone sensitive" for the remainder
+of this document.
 
-Other objects relate to a specific point in time only, such as sales. We will refer to these objects as being 
-"timezone insensitive" for the remainder of this document.
+Other objects relate to a specific point in time only, such as sales. We will refer
+to these objects as being "timezone insensitive" for the remainder of this document.
 
 ## World Clock
 
 [The world clock](https://support.getsling.com/en/articles/2016187-does-sling-convert-shift-times-based-on-different-time-zones)
- is a feature that allows a user to see events in the timezone indicated in their profile. When disabled, the user will 
-instead see events in the timezone of the location of the event.
+ is a feature that allows a user to see events in the timezone indicated in their
+profile. When disabled, the user will instead see events in the timezone of the location of the
+event.
 
-It is important to understand that the world clock is only taken into consideration in regard to the schedule 
-(calendar). In other words, it only relates to endpoints revolving around shifts and unavailabilities. Functionality 
-like labor and payroll reports **NEVER** respect the world clock.
+It is important to understand that the world clock is only taken into consideration
+in regard to the schedule (calendar). In other words, it only relates to endpoints
+revolving around shifts and unavailabilities. Functionality like labor and payroll
+reports **NEVER** respect the world clock.
 
 ## Timestamps and Ranges
 
@@ -95,8 +98,8 @@ The general behavior of the API is as follows:
 1. If world clock is enabled, the date range would be converted to the timezone of the user. 
    In our example, this means that our query would **ACTUALLY** be for the UTC range
    `2020-03-04T12:00:00/2020-03-05T12:00:00`
-2. If world clock is disabled,  the date range would be converted to the timezone of the 
-   location. In our example, this means that our query would **ACTUALLY** be for the UTC range
+2. If world clock is disabled,  the date range would be converted to the timezone of the location. 
+   In our example, this means that our query would **ACTUALLY** be for the UTC range
    `2020-03-04T04:00:00/2020-03-05T04:00:00`.
    
 ## Creating and Updating
@@ -117,5 +120,5 @@ the database, according to the following rules.
 
 ### Timezone Aware Timestamps
 
-1. If world clock is enabled, timezone is **converted** to the timezone of the user's profile.
-2. If world clock is disabled, timezone is **converted** to the timezone of the location.
+1. If world clock is enabled, timestamp is **converted** to the timezone of the user's profile.
+2. If world clock is disabled, timestamp is **converted** to the timezone of the location.
