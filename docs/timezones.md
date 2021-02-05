@@ -2,11 +2,13 @@
 
 This document explains how to work with timezones and timestamps while interacting with the API.
 
+**TL;DR - Don't use timezone aware timestamps when interacting with the API.**
+
 # Background
 
 ## Timezone Sensitive Objects
 
-Some objects are innately connected to a timezone, like locations. Other objects are
+Some objects are innately connected to a timezone, like users and locations. Other objects are
 indirectly connected as a result, like shifts, which take place at a location. We
 will refer to these objects as being "timezone sensitive" for the remainder
 of this document.
@@ -22,29 +24,30 @@ profile. When disabled, the user will instead see events in the timezone of the 
 event.
 
 It is important to understand that the world clock is only taken into consideration
-in regards to the schedule (calendar). In other words, it only relates to endpoints
+in regard to the schedule (calendar). In other words, it only relates to endpoints
 revolving around shifts and unavailabilities. Functionality like labor and payroll
 reports **NEVER** respect the world clock.
 
 ## Timestamps and Ranges
 
-When interacting with the API, timestamps and ranges should always follow ISO8601 standards.
+When interacting with the API, timestamps and ranges should **ALWAYS** follow ISO8601 standards.
 
-Both naive and timezone aware timestamps will be accepted by the API. Of course, in
-situations where you are filtering with multiple timestamps (such as start/end),
-both timestamps will need to be either naive or aware.
+Both naive and timezone aware timestamps will be accepted by the API. However, a timezone aware timestamp will be
+**converted** (see [below](#Timezone Aware Timestamps)), so to avoid confusion and complexity it is highly recommended 
+to use naive timestamps. In particular, when using an API call with multiple timestamps (such as shift start, shift end 
+and recurrence end), all timestamps should be either naive or aware (in which case they should have the same timezone).
 
 # Examples
 
 For the remainder of this section, we will assume the following:
-* You have a single location in a `GMT+0` timezone
-* Your user profile is set to a `GMT+2` timezone.
-* You have a shift scheduled on March 4 2020 from 23:00 to 23:30 (UTC)
+* Your user profile is set to a `GMT-5` timezone.
+* You have a single location in a `GMT+3` timezone
+* You have a shift scheduled on March 4 2020 from 22:00 to 23:00 (UTC)
 
 ## Querying
 
 The goal of the following examples is to query all shifts on March 4 2020.
-As you read through the examples, keep in mind that shifts are timezone sensitve.
+As you read through the examples, keep in mind that shifts are timezone sensitive.
 Endpoints that do not deal with timezone sensitive objects work exactly how you would
 expect, the timestamp indicates a concrete point in time.
 
@@ -63,35 +66,42 @@ or
 In this situation, the following will occur:
 
 1. If world clock is enabled, the timezone is assumed to be that of the user.
-2. If world clock is disabled, the timezone is assumed to be that of the location.
-
-This means that using the date range above, the shift would be returned from the API
-if world clock is disabled. However, if world clock is enabled, the shift would not be
-returned. This is because the shift actually occurs on March 5 2020 according to the
-user's timezone, so we would need to use `2020-03-05/2020-03-06` instead.
+   
+   In this case, the UTC time range would be:
+   ```
+   2020-03-04T05:00:00/2020-03-05T05:00:00
+   ```
+   Therefore, the shift will be returned.
+2. If world clock is disabled, the timezone is assumed to be that of the location. 
+   In this case, the UTC time range would be:
+   ```
+   2020-03-03T21:00:00/2020-03-04T21:00:00
+   ```
+   Therefore, the shift will **NOT** be returned. To get the shift we would need to use `2020-03-05/2020-03-06`
+   instead.
 
 ### Timestamps with Timezone
 
 When using endpoints that deal with timezone sensitive objects, you generally do not
 want to include a timezone offset. Imagine that you want to query for all shifts
-on March 4 in YOUR timezone and you are in`EST (GMT-5)`. Your dates might look like this:
+on March 4 in YOUR timezone, and you are in `GMT-7`. Your dates might look like this:
 
 ```
- 2020-03-04T00:00:00-0500/2020-03-05T00:00:00-0500
+ 2020-03-04T00:00:00-07:00/2020-03-05T00:00:00-07:00
 ```
 
 This makes sense for most APIs, where you are always providing a concrete point in time.
 However, when using an endpoint that respects location, your timestamps would
 actually get **converted** to the timezone chosen by the world clock setting or the location.
-In the example above, the following would occur:
+The general behavior of the API is as follows:
 
-1. If world clock is disabled, the date range would be converted to the timezone of
-   the location (GMT+0). This would mean that your query would **ACTUALLY** be for
-   the range `2020-03-04T00:05:00/2020-03-05T00:05:00`
-2. If world clock is enabled, the date range would be converted to the timezone of
-   the user (GMT+2). This means that your query would **ACTUALLY** be for the range
-   `2020-03-04T00:07:00/2020-03-05T00:07:00`
-
+1. If world clock is enabled, the date range would be converted to the timezone of the user. 
+   In our example, this means that our query would **ACTUALLY** be for the UTC range
+   `2020-03-04T12:00:00/2020-03-05T12:00:00`
+2. If world clock is disabled,  the date range would be converted to the timezone of the location. 
+   In our example, this means that our query would **ACTUALLY** be for the UTC range
+   `2020-03-04T04:00:00/2020-03-05T04:00:00`.
+   
 ## Creating and Updating
 
 Providing timestamps when creating or updating objects work by the same rules outlined
@@ -106,10 +116,9 @@ the database, according to the following rules.
 ### Naive Timestamps
 
 1. If world clock is enabled, timezone is assumed to be that of the user's profile.
-2. If world clock is disabled, timezone is assumed to be that of the shift's location.
-
+2. If world clock is disabled, timezone is assumed to be that of the location.
 
 ### Timezone Aware Timestamps
 
 1. If world clock is enabled, timestamp is **converted** to the timezone of the user's profile.
-2. If world clock is disabled, timestamp is **converted** to the timezone of the shift's location.
+2. If world clock is disabled, timestamp is **converted** to the timezone of the location.
