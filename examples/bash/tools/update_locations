@@ -1,0 +1,94 @@
+#!/bin/bash
+set -e
+
+# Validate arguments.
+if [ $# -ne 2 ]
+then
+  echo "./csv2shifts <token> <csv_path>"
+  echo "Update location names if they differ with Sling."
+  echo "csv format: id,name"
+  exit 1
+fi
+SERVER=${SERVER:=api}
+
+# Check for jq.
+command -v jq >/dev/null 2>&1 || {
+  echo >&2 "jq is required but not installed."
+  exit 1
+}
+
+# Get a concise description of positions and locations.
+groups=$(
+  curl -Gs "https://$SERVER.getsling.com/users/concise" \
+    -H "Authorization: $1" \
+    -H "accept: */*"
+)
+
+# Parse out location lookup.
+filter='
+  .groups |
+  to_entries |
+  map(.value) |
+  map(select(.type == "type-value"))
+'
+type="s/type-value/location/"
+locations=$(echo $groups | jq $(echo ${filter//[$'\t\r\n ']} | sed "$type"))
+
+# Parse the csv.
+while IFS=, read -r id name
+do
+  # Before we can send updates to the API, we need to reconstruct the current
+  # state of the location. Otherwise, if we just send the attributes that
+  # change, anything omitted will be set to NULL. First, look up the location's
+  # properties by ID.
+  filter="
+    map(select(.id == $id)) |
+    .[] |
+    del(.archivedAt) |
+    del(.memberCount) |
+    del(.origin)
+  "
+  location=$(echo $locations | jq "$filter")
+
+  # Check for a difference in name. If there is no difference, continue to the
+  # next row.
+  current_name=$(echo $location | jq -r ".name")
+  if [ "$name" = "$current_name" ]; then
+    echo "$id | Names equal: \"$current_name\""
+    continue
+  fi
+
+  # Get the location details so that the member list can be extracted.
+  details=$(
+    curl -Gs "https://$SERVER.getsling.com/groups/${id}" \
+      -H "Authorization: ${1//[$'\t\r\n ']}" \
+      -H "accept: */*"
+  )
+
+  # Filter the member ids.
+  filter="
+    .members |
+    map({id: .id})
+  "
+  members=$(echo $details | jq "$filter")
+
+  # Update the name and member ids.
+  filter="
+    .name |= \"$name\" |
+    .members |= $members
+  "
+  data=$(echo $location | jq "$filter")
+
+  # Send the update quietly.
+  echo "$id | Updating \"$current_name\" to \"$name\""
+  curl -S -s -o /dev/null "https://$SERVER.getsling.com/groups/${id}" \
+    -X PUT \
+    -d "${data}" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: ${1//[$'\t\r\n ']}" \
+    -H "accept: */*"
+
+  # Don't trash the API.
+  sleep 1
+
+done < $2
