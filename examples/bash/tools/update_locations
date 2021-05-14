@@ -39,10 +39,27 @@ while IFS=, read -r id name address timezone ip_address_list phone deleted delet
 do
   # Before we can send updates to the API, we need to reconstruct the current
   # state of the location. Otherwise, if we just send the attributes that
-  # change, anything omitted will be set to NULL. First, get the location details
-  # so that the member list can be extracted.
+  # change, anything omitted will be set to NULL. First, look up the location's
+  # properties by ID.
+  filter="
+    map(select(.id == $id)) |
+    .[] |
+    del(.archivedAt) |
+    del(.memberCount) |
+    del(.origin)
+  "
+  location=$(echo $locations | jq "$filter")
+
+  # Check for a difference in name.
+  current_name=$(echo $location | jq -r ".name")
+  if [ "$name" = "$current_name" ]; then
+    echo "$id | Names equal: \"$current_name\""
+    continue
+  fi
+
+  # Get the location details so that the member list can be extracted.
   details=$(
-    curl -G "https://$SERVER.getsling.com/groups/${id}" \
+    curl -Gs "https://$SERVER.getsling.com/groups/${id}" \
       -H "Authorization: ${1//[$'\t\r\n ']}" \
       -H "accept: */*"
   )
@@ -54,16 +71,6 @@ do
   "
   members=$(echo $details | jq "$filter")
 
-  # Look up the location's remaining properties by ID.
-  filter="
-    map(select(.id == $id)) |
-    .[] |
-    del(.archivedAt) |
-    del(.memberCount) |
-    del(.origin)
-  "
-  location=$(echo $locations | jq "$filter")
-
   # Update the name and member ids.
   filter="
     .name |= \"$name\" |
@@ -71,8 +78,9 @@ do
   "
   data=$(echo $location | jq "$filter")
 
-  # Send the update.
-  curl "https://$SERVER.getsling.com/groups/${id}" \
+  # Send the update quietly.
+  echo "$id | Updating \"$current_name\" to \"$name\""
+  curl -S -s -o /dev/null "https://$SERVER.getsling.com/groups/${id}" \
     -X PUT \
     -d "${data}" \
     -H "Content-Type: application/json" \
