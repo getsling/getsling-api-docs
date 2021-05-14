@@ -4,9 +4,9 @@ set -e
 # Validate arguments.
 if [ $# -ne 2 ]
 then
-  echo "./csv2shifts <token> <csv>"
-  echo "Update location names."
-  echo "csv format: id,name,address,timezone,ip_address_list,phone,deleted,deleted_by"
+  echo "./csv2shifts <token> <csv_path>"
+  echo "Update location names if they differ with Sling."
+  echo "csv format: id,name"
   exit 1
 fi
 SERVER=${SERVER:=api}
@@ -35,7 +35,7 @@ type="s/type-value/location/"
 locations=$(echo $groups | jq $(echo ${filter//[$'\t\r\n ']} | sed "$type"))
 
 # Parse the csv.
-while IFS=, read -r id name address timezone ip_address_list phone deleted deleted_by
+while IFS=, read -r id name
 do
   # Before we can send updates to the API, we need to reconstruct the current
   # state of the location. Otherwise, if we just send the attributes that
@@ -50,7 +50,8 @@ do
   "
   location=$(echo $locations | jq "$filter")
 
-  # Check for a difference in name.
+  # Check for a difference in name. If there is no difference, continue to the
+  # next row.
   current_name=$(echo $location | jq -r ".name")
   if [ "$name" = "$current_name" ]; then
     echo "$id | Names equal: \"$current_name\""
