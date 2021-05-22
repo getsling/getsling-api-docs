@@ -1,0 +1,15 @@
+#!/bin/bash
+if [ $# -ne 2 ]
+then
+  echo "./switch_org <token> <org>"
+  echo "Switch the org id associated with the session."
+  exit 1
+fi
+data="{\"orgId\": $2}"
+SERVER=${SERVER:=api}
+curl "https://$SERVER.getsling.com/account/session" \
+  -X PUT \
+  -d "$data" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"
