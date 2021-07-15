@@ -1,0 +1,13 @@
+#!/bin/bash
+if [ $# -ne 3 ]
+then
+  echo "./notifications <token> <page> <pagesize>"
+  echo "Returns the notifications report as reported on the dashboard."
+  exit 1
+fi
+SERVER=${SERVER:=api}
+curl -G "https://$SERVER.getsling.com/notifications" \
+  --data-urlencode "page=$2" \
+  --data-urlencode "pagesize=$3" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"
