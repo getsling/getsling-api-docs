@@ -1,0 +1,43 @@
+#!/bin/bash
+set -e
+
+# Validate arguments.
+if [ $# -ne 5 ]
+then
+  echo "./calendar <token> <org> <user> <dates> <tag>"
+  echo "get shifts filtered by the tag name"
+  exit 1
+fi
+SERVER=${SERVER:=api}
+
+# Check for jq.
+command -v jq >/dev/null 2>&1 || {
+  echo >&2 "jq is required but not installed."
+  exit 1
+}
+
+# Get a list of tags.
+tags=$(
+  curl -Gs "https://$SERVER.getsling.com/tags" \
+    -H "Authorization: $1" \
+    -H "accept: */*"
+)
+
+# Find the tag id.
+tag_id=$(
+  echo $tags |
+  jq "map(select(.name == \"$5\")) | .[0].id"
+)
+
+# Get the shifts.
+shifts=$(
+  curl -G "https://$SERVER.getsling.com/calendar/$2/users/$3" \
+    --data-urlencode "dates=$4" \
+    -H "Authorization: ${1//[$'\t\r\n ']}" \
+    -H "accept: */*"
+)
+
+# Filter entries with the specified tag.
+filter="map(select(.tags // [] | contains([{id: $tag_id}])))"
+filtered=$(echo $shifts | jq ${filter//[$'\t\r\n ']})
+echo $filtered
