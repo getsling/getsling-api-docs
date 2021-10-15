@@ -17,6 +17,23 @@ command -v jq >/dev/null 2>&1 || {
   exit 1
 }
 
+# Get a concise description of positions and locations.
+groups=$(
+  curl -Gs "https://$SERVER.getsling.com/users/concise" \
+    -H "Authorization: $1" \
+    -H "accept: */*"
+)
+
+# Parse out location lookup to check for existing locations.
+filter='
+  .groups |
+  to_entries |
+  map(.value) |
+  map(select(.type == "location")) |
+  map(.name)
+'
+locations=$(echo $groups | jq ${filter//[$'\t\r\n ']})
+
 # Used to strip quotes from strings.
 strip () {
   echo "$1" | sed "s/^\"//" | sed "s/\"$//"
@@ -25,6 +42,14 @@ strip () {
 # Parse the csv.
 while IFS=, read -r timezone country_code country_iso_code name address
 do
+  # Check to see if the address already exists.
+  matches=$(echo $locations | jq "map(select(. == \"$(strip "$name")\")) | length")
+  if [ $matches -gt 0 ]
+  then
+    echo "Location already exists: \"$(strip "$name")\""
+    continue
+  fi
+
   # Resolve address coordinates.
   geocode=$(
     curl -Gs "https://$SERVER.getsling.com/geocode/address" \
@@ -63,7 +88,7 @@ do
 
   # Send the update quietly.
   echo "Adding location: \"$(strip "$name")\""
-  curl -S -s -o /dev/null "https://$SERVER.getsling.com/groups" \
+  curl -S -s "https://$SERVER.getsling.com/groups" \
     -X POST \
     -d "${location}" \
     -H "Content-Type: application/json" \
