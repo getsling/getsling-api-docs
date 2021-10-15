@@ -1,0 +1,76 @@
+#!/bin/bash
+set -e
+
+# Validate arguments.
+if [ $# -ne 2 ]
+then
+  echo "./add_locations <token> <csv_path>"
+  echo "Add new locations."
+  echo "csv format: timezone country_code iso name address"
+  exit 1
+fi
+SERVER=${SERVER:=api}
+
+# Check for jq.
+command -v jq >/dev/null 2>&1 || {
+  echo >&2 "jq is required but not installed."
+  exit 1
+}
+
+# Used to strip quotes from strings.
+strip () {
+  echo "$1" | sed "s/^\"//" | sed "s/\"$//"
+}
+
+# Parse the csv.
+while IFS=, read -r timezone country_code country_iso_code name address
+do
+  # Resolve address coordinates.
+  geocode=$(
+    curl -Gs "https://$SERVER.getsling.com/geocode/address" \
+      --data-urlencode "query=\"$(strip "$address")\"" \
+      -H "Authorization: ${1//[$'\t\r\n ']}" \
+      -H "accept: */*"
+  )
+
+  # Find the coordinates.
+  coordinates="null"
+  map_center=""
+  map_zoom="1"
+  if [ $(echo "$geocode" | jq ". | length") -gt 0 ]
+  then
+    # Select the first result.
+    coordinates=$(echo "$geocode" | jq ".[0].coordinates")
+    map_center=$coordinates
+    map_zoom="16"
+
+    # Quote the coordinates so that null can be injected if necessary.
+    coordinates=\"$(strip "$coordinates")\"
+  fi
+
+  # Render the new location.
+  location="{
+    \"type\": \"location\",
+    \"timezone\": \"$(strip "$timezone")\",
+    \"countryCode\": \"$(strip "$country_code")\",
+    \"countryISOCode\": \"$(strip "$country_iso_code")\",
+    \"mapCenter\": \"$(strip "$map_center")\",
+    \"mapZoom\": \"$(strip "$map_zoom")\",
+    \"name\": \"$(strip "$name")\",
+    \"address\": \"$(strip "$address")\",
+    \"coordinates\": $coordinates
+  }"
+
+  # Send the update quietly.
+  echo "Adding location: \"$(strip "$name")\""
+  curl -S -s -o /dev/null "https://$SERVER.getsling.com/groups" \
+    -X POST \
+    -d "${location}" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: ${1//[$'\t\r\n ']}" \
+    -H "accept: */*"
+
+  # Don't spam the API.
+  sleep 1
+
+done < $2
