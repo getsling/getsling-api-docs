@@ -4,7 +4,7 @@ set -e
 # Validate arguments.
 if [ $# -ne 2 ]
 then
-  echo "./csv2shifts <token> <csv_path>"
+  echo "./update_locations <token> <csv_path>"
   echo "Update location names if they differ with Sling."
   echo "csv format: id,name"
   exit 1
