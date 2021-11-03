@@ -1,0 +1,3 @@
+# Set the author as the assignee so that our project borads can be filtered by
+# assignee for both tickets and PRs.
+addAssignees: author
