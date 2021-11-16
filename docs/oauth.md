@@ -40,7 +40,7 @@ Steps to be taken:
 
 `https://api.getsling.com/oauth2/authorize?client_id=OAUTH_CLIENT_ID&redirect_uri=https://my.redirect.uri&response_type=code&state=MY_STATE_VALUE`
 
-2. At this point end user needs to authenticate with Sling (you can do this with your own staging org creds). When this happens, user is redirected to OAuth2 client authorization screen, when he can inspect some data about the application, but most importantly it presents scopes OAuth2 app is requesting access for (if any).
+2. At this point end user needs to authenticate with Sling. When this happens, user is redirected to OAuth2 client authorization screen, when he can inspect some data about the application, but most importantly it presents scopes OAuth2 app is requesting access for (if any).
 
 3. When you approve authorization, you will get autorization code in the result of redirection to redirect uri defined within the url in step 1. Authorization code is available as a query param, it would look something like
 
