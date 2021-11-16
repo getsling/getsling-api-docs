@@ -6,16 +6,17 @@ Standard-wise, there's no better resource than [the OAuth2 RFC](https://datatrac
 
 ## Prerequisites
 
-We need OAuth2 client available, so we need to create one first. Unfortunately there's no UI for doing that yet, so one needs to hit Sling API directly to do so. Org admin access token can be taken from browser's console API requests, when logged in as admin.
+We need OAuth2 client available, so we need to create one first. Unfortunately there's no UI for doing that yet, so one needs to hit Sling API directly to do so. Org admin access token can be taken from the browser's console API requests, when logged in as admin (see the instructions how to do that [here](https://github.com/getsling/getsling-api-docs#authentication)).
 
 ```
 curl https://api.getsling.com/oauth2/client
+  -X POST
   -H 'Authorization: ORG_ADMIN_ACCESS_TOKEN'
   -d '{"grantType": "authorization_code", "grantType": "authorization_code", "scopes": [], "redirectUris": ["https://my.redirect.uri"]}'
   -H 'Content-type: application/json'
 ```
 
-The request will return client credentials and this is the only moment when end user would actually see client secret complimenting client id - after credentials creation, client secret is kept hased in the db. In case he needs new credentials, he will be able to rotate those, but this functionality is pending implementation.
+The request will return client credentials and this is the only moment when the end user would actually see client secret complimenting client id. In case he needs new credentials, he will be able to rotate those, but this functionality is pending implementation.
 
 ## Oauth2 Bearer Token
 
@@ -52,6 +53,7 @@ Steps to be taken:
 
 ```
 curl https://api.getsling.com/oauth2/token
+    -X POST
     -d '{"code": "AUTHORIZATION_CODE_WE_GOT_IN_THE_LAST_STEP", "client_id": "OAUTH_CLIENT_ID", "client_secret": "OAUTH_CLIENT_SECRET", "grant_type": "authorization_code", "redirect_uri": "https://my.redirect.uri"}' -H 'Content-type: application/json'
 ```
 
@@ -92,4 +94,4 @@ and the response
 }
 ```
 
-Vast majority of properties returned are standard OAuth2 claims, so the property naming is not accidental.
+Vast majority of properties returned are [standard OAuth2 claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims), so the naming is not accidental.
