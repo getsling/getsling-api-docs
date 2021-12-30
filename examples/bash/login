@@ -11,5 +11,5 @@ curl -is "https://$SERVER.getsling.com/account/login" \
   -d "{\"email\": \"$1\",\"password\": \"$2\"}" \
   -H "Content-Type: application/json" \
   -H "accept: */*" | \
-  grep "^authorization: " | \
-  sed "s/^authorization: //"
+  grep -i "^authorization: " | \
+  sed "s/^authorization: //I"
