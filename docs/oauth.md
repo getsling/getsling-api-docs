@@ -12,7 +12,7 @@ We need an OAuth2 client available, so we need to create one first. Unfortunatel
 curl https://api.getsling.com/oauth2/client
  -X POST
  -H 'Authorization: ORG_ADMIN_ACCESS_TOKEN'
- -d '{"grantType": "authorization_code", "grantType": "authorization_code", "scopes": [], "redirectUris": ["https://my.redirect.uri"]}'
+ -d '{"grantType": "authorization_code", "responseType": "desired_response_type", "scopes": [], "redirectUris": ["https://my.redirect.uri"]}'
  -H 'Content-type: application/json'
 ```
 
