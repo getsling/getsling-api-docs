@@ -1,0 +1,16 @@
+#!/bin/bash
+if [ $# -ne 3 ]
+then
+  echo "./labor <token> <key> <value>"
+  echo "Update a labor setting."
+  echo "See https://api.getsling.com/#/labor/put_labor_settings for valid keys."
+  exit 1
+fi
+data="{\"$2\": $3}"
+SERVER=${SERVER:=api}
+curl "https://$SERVER.getsling.com/labor/settings" \
+  -X PUT \
+  -d "$data" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*"
