@@ -1,0 +1,15 @@
+#!/bin/bash
+if [ $# -ne 3 ]
+then
+  echo "./post <token> <conversation_id> <message>"
+  exit 1
+fi
+data="{\"content\": \"$3\", \"attachments\": []}"
+
+SERVER=${SERVER:=api}
+curl "https://$SERVER.getsling.com/conversations/$2/messages" \
+  -X POST \
+  -d "${data//[$'\t\r\n ']}" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: ${1//[$'\t\r\n ']}" \
+  -H "accept: */*" \
