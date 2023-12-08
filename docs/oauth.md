@@ -1,6 +1,6 @@
 # How to Oauth
 
-Sling's OAuth provider enables org admins to create OAuth clients aka OAuth apps, that are basically entry points to Sling API and can be utilized by any Sling user. Each OAuth client has a couple of things attached to it: credentials, scopes (just use empty list for now, unless you're creating OpenID Provider app), redirect uris, grant type (there's only `authorization_type` grant available) and response type (`there's only `code` response available). Currently Sling supports OAuth Authorization Code Grant (for getting access to Sling by other automated systems) as well as OpenID Connect Authorization Code Grant (for SSO purposes).
+Sling's OAuth provider enables org admins to create OAuth clients aka OAuth apps, that are basically entry points to Sling API and can be utilized by any Sling user. Each OAuth client has a couple of things attached to it: credentials, scopes (you can just use empty list for now, unless you're creating OpenID Provider app), redirect uris, grant type (there's only `authorization_type` grant available) and response type (there's only `code` response available). Currently Sling supports OAuth Authorization Code Grant (for getting access to Sling by other automated systems) as well as OpenID Connect Authorization Code Grant (for SSO purposes).
 
 Standard-wise, there's no better resource than [the OAuth2 RFC](https://datatracker.ietf.org/doc/html/rfc6749). This document aims to explain how it all works in practice with Sling.
 
@@ -9,10 +9,10 @@ Standard-wise, there's no better resource than [the OAuth2 RFC](https://datatrac
 We need an OAuth2 client available, so we need to create one first. Unfortunately there's no UI for doing that yet, so one needs to hit Sling API directly to do so. Org admin access token can be taken from the browser's console API requests, when logged in as admin (see the instructions how to do that [here](https://github.com/getsling/getsling-api-docs#authentication)).
 
 ```
-curl https://api.getsling.com/oauth2/client
- -X POST
- -H 'Authorization: ORG_ADMIN_ACCESS_TOKEN'
- -d '{"grantType": "authorization_code", "responseType": "code", "scopes": [], "redirectUris": ["https://my.redirect.uri"]}'
+curl https://api.getsling.com/oauth2/client \
+ -X POST \
+ -H 'Authorization: ORG_ADMIN_ACCESS_TOKEN' \
+ -d '{"grantType": "authorization_code", "responseType": "code", "scopes": [], "redirectUris": ["https://my.redirect.uri"]}' \
  -H 'Content-type: application/json'
 ```
 
@@ -43,9 +43,9 @@ Steps to be taken:
 4. The authorization code obtained with the redirection would then be passed by the client to the backend of the service requesting for access to Sling APIs. 3rd party backend service would then make a request to the Sling API, exchanging the authorization code to the access token. If one of the scopes selected in the approval step is `openid`, there will also be an ID token returned with server response, together with access token. ID token is specific to OpenID Connect standard. The request would look like this
 
 ```
-curl https://api.getsling.com/oauth2/token
-   -X POST
-   -d '{"code": "AUTHORIZATION_CODE_WE_GOT_IN_THE_LAST_STEP", "client_id": "OAUTH_CLIENT_ID", "client_secret": "OAUTH_CLIENT_SECRET", "grant_type": "authorization_code", "redirect_uri": "https://my.redirect.uri"}' -H 'Content-type: application/json'
+curl https://api.getsling.com/oauth2/token \
+   -X POST \
+   -d '{"code": "AUTHORIZATION_CODE_WE_GOT_IN_THE_LAST_STEP", "client_id": "OAUTH_CLIENT_ID", "client_secret": "OAUTH_CLIENT_SECRET", "grant_type": "authorization_code", "redirect_uri": "https://my.redirect.uri"}' -H 'Content-type: application/json' 
 ```
 
 This request would be authorized by Sling using provided client ID, client secret and authorization code. Redirect uri must match one of the uris defined for the referenced OAuth2 app. Here's how the response would look like
